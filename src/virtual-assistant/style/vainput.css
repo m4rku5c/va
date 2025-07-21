@@ -1,0 +1,28 @@
+.va-input {
+    display: flex;
+    flex-direction: row;
+
+    border: 2px solid rgba(0, 0, 0, 0.377);
+    border-radius: 15px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.va-text-box {
+    all: unset;
+    width: full;
+    width: 360px;
+    height: 30px;
+    text-align: center;
+}
+
+.va-img-button {
+    width: 25px;
+    height: 25px;
+    margin-right: 10px;
+}
+
+.va-img-button:hover {
+    transform: scale(1.05);
+}

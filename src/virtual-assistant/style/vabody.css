@@ -1,0 +1,54 @@
+.feedback-modal {
+    display: flex;
+    flex-direction: column;
+}
+
+.va-menu-button {
+    border: 0;
+    padding: 10px;
+    border-radius: 15px;
+    box-shadow: 1px 1px 1px 1px  rgba(146, 146, 146, 0.5);
+    background: linear-gradient(45deg,#0e6aa4,#0790b9 50%,#0e6aa4);
+    color: white;
+    font-weight: bold;
+}
+
+.va-menu-button:hover {
+    background-color: rgb(146, 146, 146);
+    box-shadow: 2px 2px 2px 2px  rgba(146, 146, 146, 0.5);
+    transform: scale(1.1);
+}
+
+.va-txt-button {
+    padding: 5px;
+    color: white;
+    background: linear-gradient(45deg,#0e6aa4,#0790b9 50%,#0e6aa4);
+    box-shadow: 1px 1px 1px 1px  rgba(146, 146, 146, 0.5);
+    border-radius: 15px;
+    width: fit-content;
+    margin-right: auto;
+    border: 0;
+    cursor: pointer;
+    padding: 10px;
+    max-width: 230px;
+    text-align: center;
+    min-width: 50px;
+}
+
+.va-scroll-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 500px;
+    overflow: auto;
+    gap: 10px;
+}
+
+.va-common-content {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}

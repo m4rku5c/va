@@ -1,5 +1,6 @@
 
-const startingQuestions = [
+
+export const startingQuestions = [
     {link: '/verify', 
             text: 'Verify Report', 
             answer: ["I would be happy to help. On the top right corner of your screen is a blue button named 'Verify Report'. Enter your corresponding report number in the text box and then click the button 'Show Report'. Another way to get your report is to scan your QR on the physical certificate. To do so using a smart phone, open the camera app, place the QR within frame of the picture and an icon should pop up. Click this icon and it will automatically redirect your phone to your browser with the report."], 
@@ -22,11 +23,11 @@ const startingQuestions = [
             followUp: [{button: "Is there anything else I can help with?", action: "mainMenu"}]},
   ]
 
-const promptReponse = [
+export const promptReponse = [
     {id: 'default', 
           answer: ['Sorry, I do not understand. Please contact us with your inquiry at info@gemscience.net.'], 
           followUp: [{button: "Is there anything else I can help with?", action: "mainMenu"}]},
-    {id: 'mainMenu', fn: ()=>endChat()},
+    {id: 'mainMenu', fn: 'EndChat'},
     {id: 'physicalCopy', 
           link: '/hardcopy', 
           text: 'I need a hard copy', 

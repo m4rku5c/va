@@ -1,4 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import './style/vamain.css'
 
 import bot from '../virtual-assistant/assets/bot.png'
 
@@ -6,6 +9,7 @@ import VAHeader from './components/VAHeader'
 import VABody from './components/VABody'
 import VAInput from './components/VAInput'
 
+import { startingQuestions, promptReponse } from './VAConfig'
 
 const VAMain = () => {
 
@@ -19,6 +23,34 @@ const VAMain = () => {
   const [rating, setRating] = useState(0)
   const [isBotTyping, setIsBotTyping] = useState(false)
   const [maxLimit, setMaxLimit] = useState(false)
+  const goTo = useNavigate()
+
+  async function getAnswer(question, confidenceScoreThreshold) {
+    if(question == '') return
+
+    const response = await fetch('http://localhost:5100/api/ask', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ question, confidenceScoreThreshold }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      console.error('Error:', error)
+      return
+    }
+
+    const data = await response.json()
+    console.log('Answer:', data)
+    currentSearch.current.value=''
+
+    const results = [...data.answers[0].answer.matchAll(/\[([^\]]+)\]/g)].map(m => m[1]);
+    console.log('Result matching id from model:', results)
+    handleAction(question, results[0])
+
+  }
 
   const endChat = () => {
     setChatLog([])
@@ -35,6 +67,15 @@ const VAMain = () => {
         setIsBotVisible(false)
         }
     }, [chatOpen])
+
+    useEffect(()=> {
+        bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+        console.log('ChatLog ATM:', chatLog)
+    }, [chatLog])
+
+    const functionConfig = [
+        {id: 'EndChat', fn: endChat}
+    ]
 
     function handleAction(prompt, actionToDo) {
         handleDeleteButtons()
@@ -68,7 +109,9 @@ const VAMain = () => {
 
         if (item.link) goTo(item.link)
             
-        if (item.fn) item.fn()
+        if (item.fn) {
+            functionConfig.find(i => i.id === item.fn)?.fn()
+        }
     }
 
     const TypingDots = () => (
@@ -83,11 +126,13 @@ const VAMain = () => {
                 return <div className="va-open-chat-question">{item.feed}</div>
             case 'typing':
                 return <div className="va-open-chat-typing"><TypingDots /></div>
+            case 'head':
+                return <div style={{display: 'flex', flexDirection: 'row'}}><div><img src={bot} style={{marginLeft: '5px'}}width={'20px'} height={'20px'}/></div><div className={`va-open-chat-answer fade-in`}>{item.feed}</div></div>
             case 'answer':
-                return <div className={`va-open-chat-answer fade-in`}>{item.feed}</div>
+                return <div className={`va-open-chat-answer nothead fade-in`}>{item.feed}</div>
             case 'button':
                 return (
-                    <button className='va-txt-button fade-in' onClick={()=>{handleAction('',item.action)}}>
+                    <button className='va-txt-button nothead fade-in' onClick={()=>{handleAction('',item.action)}}>
                     <div className="va-open-chat-center">{item.feed}</div>
                     </button>)
             default:
@@ -110,20 +155,66 @@ const VAMain = () => {
         })
     }
 
+    function handleQueue(queueArray) {
+        const questionItems = queueArray.filter(item => item.type === 'question')
+        const answerItems = queueArray.filter(item => item.type === 'answer')
+        const buttonItems = queueArray.filter(item => item.type === 'button')
+
+        // Show question(s) instantly
+        if (questionItems.length > 0) {
+            setChatLog(prev => [...prev, ...questionItems])
+        }
+
+        if (answerItems.length > 0) {
+            answerItems[0] = { ...answerItems[0], type: 'head' }
+        }
+
+        // insert each answer with typing and fade-in
+        const displayAnswersSequentially = async () => {
+            setIsBotTyping(true)
+
+            for (const answer of answerItems) {
+            // Add "..." typing indicator
+            setChatLog(prev => [...prev, { feed: '...', type: 'typing' }])
+
+            await new Promise(resolve => setTimeout(resolve, 2000)) // delay before showing answer
+
+            // Replace "..." with actual answer (add fade flag)
+            setChatLog(prev => {
+                const withoutTyping = prev.slice(0, -1); // remove last
+                return [...withoutTyping, { ...answer, fadeIn: true }]
+            })
+
+            await new Promise(resolve => setTimeout(resolve, 500)) // short pause between answers
+            }
+
+            // Show buttons after all answers
+            if (buttonItems.length > 0) {
+                setChatLog(prev => [...prev, ...buttonItems])
+            }
+
+            setIsBotTyping(false)
+        }
+
+        if (answerItems.length > 0) {
+            displayAnswersSequentially()
+        } else if (buttonItems.length > 0) {
+            setChatLog(prev => [...prev, ...buttonItems])
+        }
+    }
 
   return (
-    <div style={{position: 'absolute', bottom: 0, right: 0, display: 'flex', flexDirection: 'column'}}>
+    <div className=''>
 
         {isBotVisible && (
-            <div className="">
-                <button className="" onClick={() => setChatOpen(true)}>
+            <div className="bot-container">
+                <button className="va-remove-button-def" onClick={() => setChatOpen(true)}>
                     <img src={bot} width="75" height="75" alt="open chat" />
                 </button>
             </div>
         )}
 
-        {chatOpen && (
-            <div>
+            <div className={`va-chat-open ${chatOpen ? 'open' : 'close'}`}>
                 <VAHeader 
                     feedBackModal={feedBackModal}
                     setChatOpen={setChatOpen}
@@ -132,10 +223,29 @@ const VAMain = () => {
                     setFeedBackModal={setFeedBackModal}
                     chatLog={chatLog}
                 />
-                <VABody />
-                <VAInput />
+                <VABody 
+                    endChatModal={endChatModal}
+                    setEndChatModal={setEndChatModal}
+                    feedBackModal={feedBackModal}
+                    setFeedBackModal={setFeedBackModal}
+                    setRating={setRating}
+                    chatLog={chatLog}
+                    endChat={endChat}
+                    handleQueue={handleQueue}
+                    renderChatItem={renderChatItem}
+                    bottomRef={bottomRef}
+                    rating={rating}
+                    setChatOpen={setChatOpen}
+                />
+                <VAInput 
+                    endChatModal={endChatModal}
+                    maxLimit={maxLimit}
+                    setMaxLimit={setMaxLimit}
+                    isBotTyping={isBotTyping}
+                    currentSearch={currentSearch}
+                    getAnswer={getAnswer}
+                />
             </div>
-        )}
 
         
     </div>

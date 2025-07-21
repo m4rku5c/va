@@ -1,0 +1,18 @@
+.va-header{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    background: linear-gradient(45deg,#0e6aa4,#0790b9 50%,#0e6aa4);
+    font-size: 150%;
+    color: white;
+    padding: 10px;
+}
+
+
+.va-button-grow:hover {
+    transform: scale(1.15);
+}
+
