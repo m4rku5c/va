@@ -1,4 +1,4 @@
-clone '...'
-cd va
-npm i
-npm run dev
+### clone '...' </br>
+### cd va   </br>
+### npm i   </br>
+### npm run dev  </br>
