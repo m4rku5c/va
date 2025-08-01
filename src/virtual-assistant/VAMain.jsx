@@ -9,48 +9,110 @@ import VAHeader from './components/VAHeader'
 import VABody from './components/VABody'
 import VAInput from './components/VAInput'
 
-import { startingQuestions, promptReponse } from './VAConfig'
+import promptReponse from '../../../PR.json'
 
 const VAMain = () => {
 
-  const [chatOpen, setChatOpen] = useState(false)
-  const bottomRef = useRef(null)
-  const currentSearch = useRef()  // currentSearch.current.value == 'sample' // usage
-  const [chatLog, setChatLog] = useState([]) // format: {Question: '', Answer: ''}
-  const [isBotVisible, setIsBotVisible] = useState(true)
-  const [endChatModal, setEndChatModal] = useState(false)
-  const [feedBackModal, setFeedBackModal] = useState(false)
-  const [rating, setRating] = useState(0)
-  const [isBotTyping, setIsBotTyping] = useState(false)
-  const [maxLimit, setMaxLimit] = useState(false)
-  const goTo = useNavigate()
+    const [csrfToken, setCsrfToken] = useState('')
+    const [chatOpen, setChatOpen] = useState(false)
+    const bottomRef = useRef(null)
+    const currentSearch = useRef() 
+    const [chatLog, setChatLog] = useState([])
+    const [isBotVisible, setIsBotVisible] = useState(true)
+    const [endChatModal, setEndChatModal] = useState(false)
+    const [feedBackModal, setFeedBackModal] = useState(false)
+    const [rating, setRating] = useState(0)
+    const [isBotTyping, setIsBotTyping] = useState(false)
+    const [maxLimit, setMaxLimit] = useState(false)
+    const goTo = useNavigate()
 
-  async function getAnswer(question, confidenceScoreThreshold) {
-    if(question == '') return
 
-    const response = await fetch('http://localhost:5100/api/ask', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ question, confidenceScoreThreshold }),
-    })
 
-    if (!response.ok) {
-      const error = await response.json()
-      console.error('Error:', error)
-      return
+    useEffect(() => {
+        async function fetchToken() {
+        try {
+            const response = await fetch('https://gsi-virtual-assistant-webapp.azurewebsites.net/csrf-token', {
+            credentials: 'include' 
+            })
+            const data = await response.json()
+            console.log(`Token recieved: ${data.csrfToken}`)
+            setCsrfToken(data.csrfToken)
+        } catch (e) {
+            console.error('Failed to fetch CSRF token', e)
+        }
+        }
+
+        fetchToken()
+    }, [])
+
+    const removeInitialTypingAnimation = () => {
+        setChatLog(prev => {
+            const withoutTyping = prev.slice(0, -1)
+            return [...withoutTyping]
+        })
     }
 
-    const data = await response.json()
-    console.log('Answer:', data)
-    currentSearch.current.value=''
+    async function getAnswer(question) {
+        if (!question) return
 
-    const results = [...data.answers[0].answer.matchAll(/\[([^\]]+)\]/g)].map(m => m[1]);
-    console.log('Result matching id from model:', results)
-    handleAction(question, results[0])
+       
 
-  }
+        try {
+            // this will send message right away, rather relying on handleaction to queue after api retrieves faster
+            // "looks" more reponsive this way, user has something to wait for 
+            currentSearch.current.value = ''
+            handleDeleteButtons()
+            handleQueue([{ feed: question, type: 'question' }])
+            // show typing while waiting for answer to form / api to clear
+            setChatLog(prev => [...prev, { feed: '...', type: 'typing' }])
+
+            console.log(`csrfToken ${csrfToken}`)
+
+            const response = await fetch('https://gsi-virtual-assistant-webapp.azurewebsites.net/ask/id', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            credentials: 'include', 
+            body: JSON.stringify({ question })
+            })
+
+            if (response.status === 429) {
+                removeInitialTypingAnimation()
+                const error = await response.json().catch(() => null)
+                console.error('Server Error:', error || response.status)  
+                currentSearch.current.value = ''
+                return handleAction('instant', 'tooManyRequests')
+            }
+            else if (!response.ok) {
+                removeInitialTypingAnimation()
+                const error = await response.json().catch(() => null)
+                console.error('Server Error:', error || response.status)
+                currentSearch.current.value = ''
+                return handleAction('instant', 'default')
+            }
+
+            
+
+            const data = await response.json()
+            console.log('Answer:', data)
+
+            
+
+            //const results = [...data.answers[0].answer.matchAll(/\[([^\]]+)\]/g)].map(m => m[1])
+            //console.log('Result IDs:', results)
+
+            // remove animation for typing otherwise it will show double when handleAction executes
+            removeInitialTypingAnimation()
+            //handleAction('instant', results[0])
+            handleAction('instant', data[0])
+        } catch (error) {
+            removeInitialTypingAnimation()
+            console.error('Network Error:', error)
+            return handleAction('instant', 'noConnection')
+        }
+    }
 
   const endChat = () => {
     setChatLog([])
@@ -70,15 +132,16 @@ const VAMain = () => {
 
     useEffect(()=> {
         bottomRef.current?.scrollIntoView({ behavior: 'auto' })
-        console.log('ChatLog ATM:', chatLog)
+        // console.log('ChatLog ATM:', chatLog)
     }, [chatLog])
 
     const functionConfig = [
         {id: 'EndChat', fn: endChat}
     ]
 
-    function handleAction(prompt, actionToDo) {
-        handleDeleteButtons()
+    async function handleAction(prompt, actionToDo) {
+        // console.log('running handle action')
+        await handleDeleteButtons()
 
         const item = promptReponse.find(r => r.id === actionToDo)
         if (!item) {
@@ -86,9 +149,10 @@ const VAMain = () => {
             return
         }
 
-        const queue = [];
-        if (prompt != '') queue.push({ feed: prompt, type: 'question' })
-        else if (item.text) queue.push({ feed: item.text, type: 'question' })
+        const queue = []
+        if (prompt == 'instant') queue.push() // use this when u want to ignore question
+        else if (prompt != '') queue.push({ feed: prompt, type: 'question' }) // anything else if u want to force own str
+        else if (item.text) queue.push({ feed: item.text, type: 'question' }) // if empty str, use the text in json corresponding to the action in PR.json
         if (item.answer) {
             queue.push(
             ...item.answer.map(a=> ({
@@ -125,15 +189,15 @@ const VAMain = () => {
             case 'question':
                 return <div className="va-open-chat-question">{item.feed}</div>
             case 'typing':
-                return <div className="va-open-chat-typing"><TypingDots /></div>
+                return <div style={{display: 'flex', flexDirection: 'row'}}><div><img src={bot} style={{marginLeft: '5px'}}width={'20px'} height={'20px'}/></div><TypingDots /></div>
             case 'head':
                 return <div style={{display: 'flex', flexDirection: 'row'}}><div><img src={bot} style={{marginLeft: '5px'}}width={'20px'} height={'20px'}/></div><div className={`va-open-chat-answer fade-in`}>{item.feed}</div></div>
             case 'answer':
                 return <div className={`va-open-chat-answer nothead fade-in`}>{item.feed}</div>
             case 'button':
                 return (
-                    <button className='va-txt-button nothead fade-in' onClick={()=>{handleAction('',item.action)}}>
-                    <div className="va-open-chat-center">{item.feed}</div>
+                    <button className='va-menu-button chatItem nothead fade-in' onClick={()=>{handleAction('',item.action)}}>
+                        {item.feed}
                     </button>)
             default:
                 return <div className="va-open-chat-center">{item.feed}</div>
@@ -147,7 +211,7 @@ const VAMain = () => {
             for (let i = prevChatLog.length - 1; i >= 0; i--) {
                 if (prevChatLog[i]?.type !== 'button') {
                     lastNonButtonIndex = i
-                    break;
+                    break
                 }
             }
             // Return array up to the last non-button element
@@ -165,6 +229,7 @@ const VAMain = () => {
             setChatLog(prev => [...prev, ...questionItems])
         }
 
+        // top answer should have the virutal assitant icon next to
         if (answerItems.length > 0) {
             answerItems[0] = { ...answerItems[0], type: 'head' }
         }
@@ -181,7 +246,7 @@ const VAMain = () => {
 
             // Replace "..." with actual answer (add fade flag)
             setChatLog(prev => {
-                const withoutTyping = prev.slice(0, -1); // remove last
+                const withoutTyping = prev.slice(0, -1) // remove last
                 return [...withoutTyping, { ...answer, fadeIn: true }]
             })
 
@@ -236,6 +301,7 @@ const VAMain = () => {
                     bottomRef={bottomRef}
                     rating={rating}
                     setChatOpen={setChatOpen}
+                    csrfToken={csrfToken}
                 />
                 <VAInput 
                     endChatModal={endChatModal}
@@ -244,10 +310,9 @@ const VAMain = () => {
                     isBotTyping={isBotTyping}
                     currentSearch={currentSearch}
                     getAnswer={getAnswer}
+                    csrfToken={csrfToken}
                 />
             </div>
-
-        
     </div>
   )
 }

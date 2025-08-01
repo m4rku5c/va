@@ -14,7 +14,7 @@ const VAHeader = (props) => {
             </button>
         </div>
         <div>
-            <button className='va-remove-button-def va-button-grow' onClick={props.feedBackModal ? ()=>{ props.setChatOpen(false); props.setEndChatModal(false); const timerId = setTimeout(() => {props.endChat(); props.setFeedBackModal(false)}, 700)} : props.chatLog.length>=1 ? ()=>{props.setEndChatModal(true)} : ()=>{props.setChatOpen(false)}}>
+            <button className='va-remove-button-def va-button-grow' onClick={props.feedBackModal ? ()=>{ props.setChatOpen(false); props.setEndChatModal(false); const timerId = setTimeout(() => {props.endChat(); props.setFeedBackModal(false)}, 10)} : props.chatLog.length>=1 ? ()=>{props.setEndChatModal(true)} : ()=>{props.setChatOpen(false)}}>
                 <img src={close} width={'25px'} height={'25px'}/>
             </button>
         </div>

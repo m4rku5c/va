@@ -1,54 +1,141 @@
+
 .feedback-modal {
     display: flex;
     flex-direction: column;
+    gap: 15px;
+    align-items: center;
 }
 
 .va-menu-button {
-    border: 0;
-    padding: 10px;
+    border: none;
     border-radius: 15px;
-    box-shadow: 1px 1px 1px 1px  rgba(146, 146, 146, 0.5);
-    background: linear-gradient(45deg,#0e6aa4,#0790b9 50%,#0e6aa4);
+    background: linear-gradient(45deg, #0e6aa4, #0790b9 50%, #0e6aa4);
     color: white;
     font-weight: bold;
+    cursor: pointer;
+    /* transition: all 0.2s ease-in-out; */
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+
+    &.chatItem {
+        width: fit-content;
+        min-width: 240px;
+        max-width: 240px;
+        max-height: 40px;
+        min-height: 40px;
+        font-size: 12px;
+        
+    }
+
+    &.feedback {
+        padding: 10px;
+    }
+
+    &.menu-bigger {
+        padding: 15px;
+    }
+
+    &.bigger {
+        padding: 15px;
+        width: 80px;
+    }
 }
+
 
 .va-menu-button:hover {
-    background-color: rgb(146, 146, 146);
-    box-shadow: 2px 2px 2px 2px  rgba(146, 146, 146, 0.5);
-    transform: scale(1.1);
+    background: linear-gradient(45deg, #0790b9, #0e6aa4 50%, #0790b9);
+    transform: scale(1.05);
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.25);
 }
 
-.va-txt-button {
-    padding: 5px;
-    color: white;
-    background: linear-gradient(45deg,#0e6aa4,#0790b9 50%,#0e6aa4);
-    box-shadow: 1px 1px 1px 1px  rgba(146, 146, 146, 0.5);
-    border-radius: 15px;
-    width: fit-content;
-    margin-right: auto;
-    border: 0;
-    cursor: pointer;
-    padding: 10px;
-    max-width: 230px;
+.va-endchat-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999;
     text-align: center;
-    min-width: 50px;
+    background-color: rgba(255, 255, 255, 0.95);
+    width: 320px;
+    padding: 25px 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(3px);
 }
 
-.va-scroll-content {
+.va-feedback-input {
+    width: 100%;
+    height: 130px;
+    resize: none;
+    box-sizing: border-box;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    color: #333;
+    outline: none;
+    transition: box-shadow 0.2s ease-in-out, background-color 0.2s;
+}
+
+.va-feedback-input:focus {
+    background-color: white;
+    box-shadow: 0 0 0 2px #0790b9;
+}
+
+.va-feedback-star-div {
     display: flex;
-    flex-direction: column;
-    max-height: 500px;
-    overflow: auto;
+    flex-direction: row;
+    justify-content: center;
     gap: 10px;
+}
+
+.va-feedback-img-star {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.va-feedback-img-star:hover {
+    transform: scale(1.25);
+}
+
+.va-txt-lrg {
+    font-size: 1.2rem;
+    font-weight: bold;
 }
 
 .va-common-content {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    margin: 15px auto;
     width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 15px;
-    margin-bottom: 15px;
 }
+
+.va-txt-button {
+    padding: 10px 15px;
+    color: white;
+    background: linear-gradient(45deg, #0e6aa4, #0790b9 50%, #0e6aa4);
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    max-width: 230px;
+    min-width: 50px;
+    text-align: center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.va-txt-button:hover {
+    transform: scale(1.05);
+}
+
+.va-scroll-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 480px;
+    overflow-y: auto;
+    gap: 10px;
+    padding-right: 5px;
+}
+

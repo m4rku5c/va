@@ -18,7 +18,7 @@ const VAInput = (props) => {
               type='text' ref={props.currentSearch} 
               placeholder={props.isBotTyping ? 'Please Wait...' : 'Ask the Assistant'}
         />
-          <button disabled={props.isBotTyping} className='va-remove-button-def' onClick={()=>props.getAnswer(props.currentSearch.current.value, 0.5)}><img className='va-img-button' src={props.isBotTyping ? senddisable : send}/></button>
+          <button disabled={props.isBotTyping} className='va-remove-button-def' onClick={()=>props.getAnswer(props.currentSearch.current.value)}><img className='va-img-button' src={props.isBotTyping ? senddisable : send}/></button>
       </div>
   )
 }

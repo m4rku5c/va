@@ -7,14 +7,16 @@
     margin-left: 10px;
     margin-right: 10px;
     margin-bottom: 10px;
+    margin-top: auto;
 }
 
 .va-text-box {
     all: unset;
     width: full;
     width: 360px;
-    height: 30px;
-    text-align: center;
+    height: 40px;
+    margin: 5px;
+    text-align: left;
 }
 
 .va-img-button {
@@ -24,5 +26,5 @@
 }
 
 .va-img-button:hover {
-    transform: scale(1.05);
+    transform: scale(1.15);
 }
